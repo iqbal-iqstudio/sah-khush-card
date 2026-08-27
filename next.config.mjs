@@ -2,7 +2,7 @@
 const isProd = process.env.NODE_ENV === "production";
 // Set to your repo name for GitHub Pages project sites (e.g. /sah-khush-card).
 // Leave empty ("") if using a custom domain or a user/org GitHub Pages site.
-const GH_PAGES_BASE = "/sah-khush-card";
+const GH_PAGES_BASE = "";
 
 const nextConfig = {
   reactStrictMode: true,
@@ -16,8 +16,8 @@ const nextConfig = {
     ],
   },
   trailingSlash: true,
-  basePath: isProd ? GH_PAGES_BASE : "",
-  assetPrefix: isProd ? GH_PAGES_BASE + "/" : "",
+  basePath: isProd && GH_PAGES_BASE ? GH_PAGES_BASE : "",
+  assetPrefix: isProd && GH_PAGES_BASE ? GH_PAGES_BASE + "/" : "",
 };
 
 export default nextConfig;

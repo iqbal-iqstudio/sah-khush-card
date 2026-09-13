@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
-import { products, brands, fabrics } from "@/data/mock-products";
+import { useAdminStore } from "@/store/admin-store";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { formatBDT } from "@/lib/utils";
@@ -18,31 +18,7 @@ interface LocalFilters {
   sort: string;
 }
 
-const colorList = (() => {
-  const map = new Map<string, string>();
-  for (const p of products) for (const c of p.colors) if (!map.has(c.name)) map.set(c.name, c.hex);
-  return Array.from(map, ([name, hex]) => ({ name, hex }));
-})();
-
-function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilters): Product[] {
-  let out = list.slice();
-  const brand = params.get("brand");
-  if (brand) out = out.filter((p) => p.brand === brand);
-  const fabric = params.get("fabric");
-  if (fabric) out = out.filter((p) => p.fabric === fabric);
-  if (local.brands.size) out = out.filter((p) => local.brands.has(p.brand));
-  if (local.fabrics.size) out = out.filter((p) => local.fabrics.has(p.fabric));
-  if (local.colors.size) out = out.filter((p) => p.colors.some((c) => local.colors.has(c.name)));
-  if (local.min != null) out = out.filter((p) => p.price >= local.min!);
-  if (local.max != null) out = out.filter((p) => p.price <= local.max!);
-  const sort = params.get("sort") || local.sort;
-  if (sort === "price-asc") out.sort((a, b) => a.price - b.price);
-  else if (sort === "price-desc") out.sort((a, b) => b.price - a.price);
-  else if (sort === "newest") out.reverse();
-  return out;
-}
-
-function Filters({ local, setLocal, onClose }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void }) {
+function Filters({ local, setLocal, onClose, allBrands, allFabrics }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void; allBrands: string[]; allFabrics: string[] }) {
   const toggle = (set: Set<string>, key: string) => {
     const next = new Set(set);
     next.has(key) ? next.delete(key) : next.add(key);
@@ -56,7 +32,7 @@ function Filters({ local, setLocal, onClose }: { local: LocalFilters; setLocal: 
       </div>
       <div className="border-b border-taupe/10 pb-5">
         <h4 className="mb-2 text-sm font-semibold">Brand</h4>
-        {brands.map((b) => (
+        {allBrands.map((b) => (
           <label key={b} className="flex items-center gap-2 py-1 text-sm">
             <input type="checkbox" checked={local.brands.has(b)} onChange={() => setLocal({ ...local, brands: toggle(local.brands, b) })} className="accent-brown" /> {b}
           </label>
@@ -64,32 +40,11 @@ function Filters({ local, setLocal, onClose }: { local: LocalFilters; setLocal: 
       </div>
       <div className="border-b border-taupe/10 pb-5">
         <h4 className="mb-2 text-sm font-semibold">Fabric</h4>
-        {fabrics.map((f) => (
+        {allFabrics.map((f) => (
           <label key={f} className="flex items-center gap-2 py-1 text-sm">
             <input type="checkbox" checked={local.fabrics.has(f)} onChange={() => setLocal({ ...local, fabrics: toggle(local.fabrics, f) })} className="accent-brown" /> {f}
           </label>
         ))}
-      </div>
-      <div className="border-b border-taupe/10 pb-5">
-        <h4 className="mb-2 text-sm font-semibold">Color</h4>
-        <div className="flex flex-wrap gap-2">
-          {colorList.map((c) => {
-            const active = local.colors.has(c.name);
-            return (
-              <button
-                key={c.name}
-                type="button"
-                title={c.name}
-                aria-pressed={active}
-                onClick={() => setLocal({ ...local, colors: toggle(local.colors, c.name) })}
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${active ? "border-brown bg-alabaster font-medium" : "border-taupe/30 hover:border-taupe/60"}`}
-              >
-                <span className="h-4 w-4 rounded-full border border-taupe/20" style={{ backgroundColor: c.hex }} />
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
       </div>
       <div className="border-b border-taupe/10 pb-5">
         <h4 className="mb-2 text-sm font-semibold">Price (৳)</h4>
@@ -112,13 +67,39 @@ function Filters({ local, setLocal, onClose }: { local: LocalFilters; setLocal: 
   );
 }
 
+function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilters): Product[] {
+  let out = list.filter((p) => p.availability !== "stockout");
+  const brand = params.get("brand");
+  if (brand) out = out.filter((p) => p.brand === brand);
+  const fabric = params.get("fabric");
+  if (fabric) out = out.filter((p) => p.fabric === fabric);
+  const sort = params.get("sort");
+  if (sort) local = { ...local, sort };
+  if (local.brands.size) out = out.filter((p) => local.brands.has(p.brand));
+  if (local.fabrics.size) out = out.filter((p) => local.fabrics.has(p.fabric));
+  if (local.colors.size) out = out.filter((p) => p.colors.some((c) => local.colors.has(c.name)));
+  if (local.min != null) out = out.filter((p) => p.price >= local.min!);
+  if (local.max != null) out = out.filter((p) => p.price <= local.max!);
+  if (local.sort === "price-asc") out.sort((a, b) => a.price - b.price);
+  else if (local.sort === "price-desc") out.sort((a, b) => b.price - a.price);
+  else if (local.sort === "newest") out.reverse();
+  return out;
+}
+
 export default function ProductsClient() {
   const router = useRouter();
   const params = useSearchParams();
+  const products = useAdminStore((s) => s.products);
+  const initProducts = useAdminStore((s) => s.initProducts);
   const [local, setLocal] = useState<LocalFilters>({ brands: new Set(), fabrics: new Set(), colors: new Set(), min: null, max: null, sort: params.get("sort") || "featured" });
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const filtered = useMemo(() => applyFilters(products, new URLSearchParams(params.toString()), local), [params, local]);
+  useEffect(() => { initProducts(); }, [initProducts]);
+
+  const allBrands = [...new Set(products.map((p) => p.brand))].sort();
+  const allFabrics = [...new Set(products.map((p) => p.fabric))].sort();
+
+  const filtered = useMemo(() => applyFilters(products, new URLSearchParams(params.toString()), local), [params, local, products]);
 
   const syncUrl = useCallback(() => {
     const q = new URLSearchParams(params.toString());
@@ -142,7 +123,7 @@ export default function ProductsClient() {
       <div className="grid lg:grid-cols-[260px_1fr] gap-8">
         <aside className="hidden lg:block">
           <div className="sticky top-24 rounded-2xl border border-taupe/10 bg-white p-5 shadow-soft">
-            <Filters local={local} setLocal={setLocal} />
+            <Filters local={local} setLocal={setLocal} allBrands={allBrands} allFabrics={allFabrics} />
             <button onClick={syncUrl} className="mt-6 w-full rounded-full bg-brown px-5 py-2.5 text-sm font-medium text-ivory shadow-soft transition-all hover:-translate-y-0.5 hover:bg-brown-deep hover:shadow-lift">
               Show {filtered.length} Results
             </button>
@@ -150,7 +131,7 @@ export default function ProductsClient() {
         </aside>
 
         <div>
-          <p className="mb-4 text-sm text-taupe">{filtered.length} pieces · {formatBDT(5000)} – {formatBDT(25000)}+</p>
+          <p className="mb-4 text-sm text-taupe">{filtered.length} pieces</p>
           {filtered.length === 0 ? (
             <p className="py-20 text-center text-taupe">No pieces match these filters yet.</p>
           ) : (
@@ -165,7 +146,7 @@ export default function ProductsClient() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-charcoal/40" onClick={() => setSheetOpen(false)} />
           <div className="absolute bottom-0 left-0 w-full rounded-t-3xl bg-ivory p-6 shadow-lift">
-            <Filters local={local} setLocal={setLocal} onClose={() => { syncUrl(); setSheetOpen(false); }} />
+            <Filters local={local} setLocal={setLocal} onClose={() => { syncUrl(); setSheetOpen(false); }} allBrands={allBrands} allFabrics={allFabrics} />
             <Button variant="brown" className="mt-6 w-full" onClick={() => { syncUrl(); setSheetOpen(false); }}>Show {filtered.length} Results</Button>
           </div>
         </div>

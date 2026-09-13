@@ -1,24 +1,48 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { products, getProduct } from "@/data/mock-products";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAdminStore } from "@/store/admin-store";
 import ProductDetail from "@/components/product/ProductDetail";
+import type { Product } from "@/types/product";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
+export default function ProductPage() {
+  const params = useParams();
+  const router = useRouter();
+  const products = useAdminStore((s) => s.products);
+  const initProducts = useAdminStore((s) => s.initProducts);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const p = getProduct(params.slug);
-  if (!p) return { title: "Product Not Found" };
-  return {
-    title: p.name,
-    description: p.description,
-    openGraph: { images: [p.image], title: p.name, description: p.description },
-  };
-}
+  useEffect(() => {
+    initProducts();
+  }, [initProducts]);
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProduct(params.slug);
-  if (!product) notFound();
+  useEffect(() => {
+    const slug = params?.slug as string;
+    if (products.length > 0) {
+      const found = products.find((p) => p.slug === slug);
+      setProduct(found || null);
+      setLoading(false);
+    }
+  }, [params?.slug, products]);
+
+  if (loading) {
+    return (
+      <div className="container-shell py-20 text-center">
+        <p className="text-taupe">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="container-shell py-20 text-center">
+        <p className="font-serif text-2xl">Product Not Found</p>
+        <button onClick={() => router.push("/products")} className="mt-4 text-brown link-underline">Back to Products</button>
+      </div>
+    );
+  }
+
   return <ProductDetail product={product} />;
 }

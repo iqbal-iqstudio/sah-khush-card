@@ -18,7 +18,7 @@ interface LocalFilters {
   sort: string;
 }
 
-function Filters({ local, setLocal, onClose, allBrands, allFabrics, allColors }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void; allBrands: string[]; allFabrics: string[]; allColors: { name: string; hex: string }[] }) {
+function Filters({ local, setLocal, onClose, allBrands, allFabrics, allColors }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void; allBrands: string[]; allFabrics: string[]; allColors: { label: string; hex: string }[] }) {
   const toggle = (set: Set<string>, key: string) => {
     const next = new Set(set);
     next.has(key) ? next.delete(key) : next.add(key);
@@ -51,9 +51,9 @@ function Filters({ local, setLocal, onClose, allBrands, allFabrics, allColors }:
           <h4 className="mb-2 text-sm font-semibold">Color</h4>
           <div className="flex flex-wrap gap-2">
             {allColors.map((c) => (
-              <button key={c.name} onClick={() => setLocal({ ...local, colors: toggle(local.colors, c.name) })}
-                title={c.name}
-                className={`h-7 w-7 rounded-full border-2 transition ${local.colors.has(c.name) ? "border-brown ring-2 ring-gold/40" : "border-taupe/20 hover:border-taupe/50"}`}
+              <button key={c.label} onClick={() => setLocal({ ...local, colors: toggle(local.colors, c.label) })}
+                title={c.label}
+                className={`h-7 w-7 rounded-full border-2 transition ${local.colors.has(c.label) ? "border-brown ring-2 ring-gold/40" : "border-taupe/20 hover:border-taupe/50"}`}
                 style={{ backgroundColor: c.hex }} />
             ))}
           </div>
@@ -98,7 +98,33 @@ function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilt
   if (sort) local = { ...local, sort };
   if (local.brands.size) out = out.filter((p) => local.brands.has(p.brand));
   if (local.fabrics.size) out = out.filter((p) => local.fabrics.has(p.fabric));
-  if (local.colors.size) out = out.filter((p) => p.colors.some((c) => local.colors.has(c.name)));
+  if (local.colors.size) {
+    const COLOR_BUCKETS: { label: string; match: (r: number, g: number, b: number) => boolean }[] = [
+      { label: "Red", match: (r, g, b) => r > 150 && g < 80 && b < 80 },
+      { label: "Maroon", match: (r, g, b) => r > 80 && r < 180 && g < 60 && b < 60 },
+      { label: "Pink", match: (r, g, b) => r > 180 && g < 120 && b > 100 && b < 180 },
+      { label: "Orange", match: (r, g, b) => r > 200 && g > 80 && g < 170 && b < 80 },
+      { label: "Gold", match: (r, g, b) => r > 150 && g > 120 && g < 200 && b < 100 && Math.abs(r - g) < 80 },
+      { label: "Yellow", match: (r, g, b) => r > 180 && g > 170 && b < 80 },
+      { label: "Green", match: (r, g, b) => g > 120 && r < g && b < g },
+      { label: "Teal", match: (r, g, b) => g > 100 && b > 100 && r < 80 },
+      { label: "Blue", match: (r, g, b) => b > 150 && r < b && g < b },
+      { label: "Navy", match: (r, g, b) => b > r && b > g && r < 60 && g < 80 && b < 100 },
+      { label: "Purple", match: (r, g, b) => r > 80 && b > 120 && g < 80 },
+      { label: "White", match: (r, g, b) => r > 230 && g > 230 && b > 230 },
+      { label: "Ivory", match: (r, g, b) => r > 210 && g > 200 && b > 180 && r < 240 },
+      { label: "Beige", match: (r, g, b) => r > 180 && g > 160 && b > 120 && r > b },
+      { label: "Brown", match: (r, g, b) => r > 80 && g > 40 && g < 120 && b < 80 && r > g },
+      { label: "Black", match: (r, g, b) => r < 60 && g < 60 && b < 60 },
+    ];
+    const hexToRgb = (hex: string) => { const h = hex.replace("#", ""); return { r: parseInt(h.substring(0, 2), 16), g: parseInt(h.substring(2, 4), 16), b: parseInt(h.substring(4, 6), 16) }; };
+    const matchesBucket = (hex: string, label: string) => {
+      const { r, g, b } = hexToRgb(hex);
+      const bucket = COLOR_BUCKETS.find((b) => b.label === label);
+      return bucket ? bucket.match(r, g, b) : false;
+    };
+    out = out.filter((p) => p.colors.some((c) => [...local.colors].some((label) => matchesBucket(c.hex, label))));
+  }
   if (local.min != null) out = out.filter((p) => p.price >= local.min!);
   if (local.max != null) out = out.filter((p) => p.price <= local.max!);
   if (local.sort === "price-asc") out.sort((a, b) => a.price - b.price);
@@ -120,9 +146,47 @@ export default function ProductsClient() {
 
   const allBrands = [...new Set(products.map((p) => p.brand))].sort();
   const allFabrics = [...new Set(products.map((p) => p.fabric))].sort();
-  const allColorsMap = new Map<string, string>();
-  products.forEach((p) => p.colors.forEach((c) => { if (!allColorsMap.has(c.name)) allColorsMap.set(c.name, c.hex); }));
-  const allColors = [...allColorsMap.entries()].map(([name, hex]) => ({ name, hex })).sort((a, b) => a.name.localeCompare(b.name));
+
+  const COLOR_BUCKETS: { label: string; hex: string; match: (r: number, g: number, b: number) => boolean }[] = [
+    { label: "Red", hex: "#DC2626", match: (r, g, b) => r > 150 && g < 80 && b < 80 },
+    { label: "Maroon", hex: "#7F1D1D", match: (r, g, b) => r > 80 && r < 180 && g < 60 && b < 60 },
+    { label: "Pink", hex: "#EC4899", match: (r, g, b) => r > 180 && g < 120 && b > 100 && b < 180 },
+    { label: "Orange", hex: "#F97316", match: (r, g, b) => r > 200 && g > 80 && g < 170 && b < 80 },
+    { label: "Gold", hex: "#C6A664", match: (r, g, b) => r > 150 && g > 120 && g < 200 && b < 100 && Math.abs(r - g) < 80 },
+    { label: "Yellow", hex: "#EAB308", match: (r, g, b) => r > 180 && g > 170 && b < 80 },
+    { label: "Green", hex: "#16A34A", match: (r, g, b) => g > 120 && r < g && b < g },
+    { label: "Teal", hex: "#0D9488", match: (r, g, b) => g > 100 && b > 100 && r < 80 },
+    { label: "Blue", hex: "#2563EB", match: (r, g, b) => b > 150 && r < b && g < b },
+    { label: "Navy", hex: "#1B2A4A", match: (r, g, b) => b > r && b > g && r < 60 && g < 80 && b < 100 },
+    { label: "Purple", hex: "#7C3AED", match: (r, g, b) => r > 80 && b > 120 && g < 80 },
+    { label: "White", hex: "#FAFAF9", match: (r, g, b) => r > 230 && g > 230 && b > 230 },
+    { label: "Ivory", hex: "#FFFDF9", match: (r, g, b) => r > 210 && g > 200 && b > 180 && r < 240 },
+    { label: "Beige", hex: "#E7D8B8", match: (r, g, b) => r > 180 && g > 160 && b > 120 && r > b },
+    { label: "Brown", hex: "#92400E", match: (r, g, b) => r > 80 && g > 40 && g < 120 && b < 80 && r > g },
+    { label: "Black", hex: "#1A1A1A", match: (r, g, b) => r < 60 && g < 60 && b < 60 },
+  ];
+
+  const hexToRgb = (hex: string) => {
+    const h = hex.replace("#", "");
+    return { r: parseInt(h.substring(0, 2), 16), g: parseInt(h.substring(2, 4), 16), b: parseInt(h.substring(4, 6), 16) };
+  };
+
+  const bucketColor = (hex: string) => {
+    const { r, g, b } = hexToRgb(hex);
+    for (const bucket of COLOR_BUCKETS) {
+      if (bucket.match(r, g, b)) return bucket;
+    }
+    return null;
+  };
+
+  const colorBucketMap = new Map<string, { label: string; hex: string }>();
+  products.forEach((p) => p.colors.forEach((c) => {
+    const bucket = bucketColor(c.hex);
+    if (bucket && !colorBucketMap.has(bucket.label)) {
+      colorBucketMap.set(bucket.label, { label: bucket.label, hex: bucket.hex });
+    }
+  }));
+  const allColors = [...colorBucketMap.values()].sort((a, b) => a.label.localeCompare(b.label));
 
   const filtered = useMemo(() => applyFilters(products, new URLSearchParams(params.toString()), local), [params, local, products]);
 

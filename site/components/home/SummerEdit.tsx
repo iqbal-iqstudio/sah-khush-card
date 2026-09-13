@@ -11,7 +11,7 @@ export default function SummerEdit() {
 
   useEffect(() => { initProducts(); }, [initProducts]);
 
-  const hot = products.slice(0, 8);
+  const hot = [...products].sort((a, b) => (a.availability === "stockout" ? 1 : 0) - (b.availability === "stockout" ? 1 : 0)).slice(0, 8);
 
   return (
     <section className="container-shell py-14">

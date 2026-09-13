@@ -3,8 +3,6 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
-      - "site/**"
   workflow_dispatch:
 
 permissions:
@@ -28,23 +26,20 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: site/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: site
 
       - name: Build (static export)
         run: npm run build
-        working-directory: site
 
       - name: Disable Jekyll
-        run: touch site/out/.nojekyll
+        run: touch out/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site/out
+          path: out
 
   deploy:
     needs: build

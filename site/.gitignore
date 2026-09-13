@@ -1,8 +1,5 @@
 /node_modules
 /.next
-**/node_modules
-**/.next
-**/out
 *.log
 dev.log
 dev.err

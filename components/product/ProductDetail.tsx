@@ -108,6 +108,8 @@ export default function ProductDetail({ product }: { product: Product }) {
     return () => document.removeEventListener("keydown", handler);
   }, [zoomIdx, zoomPrev, zoomNext]);
 
+  const isStockOut = product.availability === "stockout";
+
   const accordion = [
     { title: "Description", content: product.description },
     { title: "Shipping & COD Info", content: "Inside Dhaka: ৳70 (24–48 hours). Outside Dhaka: ৳130 (3–5 days). Advance payment of delivery charge via bKash/Nagad required to confirm order. Remaining balance via Cash on Delivery." },
@@ -136,10 +138,6 @@ export default function ProductDetail({ product }: { product: Product }) {
         <Reveal delay={0.1}>
           <p className="text-xs uppercase tracking-[0.2em] text-gold">{product.brand} · <a href={`/products?fabric=${product.fabric}`} className="link-underline">{product.fabric}</a></p>
           <h1 className="font-serif text-3xl sm:text-4xl mt-1">{product.name}</h1>
-          <div className="mt-2 flex items-center gap-3 text-sm text-taupe">
-            <span className="flex items-center gap-1 text-gold">{"★".repeat(Math.round(product.rating))}</span>
-            <span>{product.sold} sold</span>
-          </div>
           <div className="mt-4 flex items-center gap-3">
             <span className="text-3xl font-semibold">{formatBDT(product.price)}</span>
             {product.compareAtPrice && <span className="text-lg text-taupe line-through">{formatBDT(product.compareAtPrice)}</span>}
@@ -184,8 +182,14 @@ export default function ProductDetail({ product }: { product: Product }) {
 
           {/* Desktop actions */}
           <div className="mt-6 hidden gap-3 lg:flex">
-            <button onClick={handleAdd} className="btn-brown btn-lg flex-1">Add to Bag</button>
-            <button onClick={handleBuyNow} className="btn-outline btn-lg flex-1">Buy Now</button>
+            {isStockOut ? (
+              <button disabled className="btn-lg flex-1 rounded-full border-2 border-taupe/30 bg-taupe/10 px-6 py-3 text-sm font-medium text-taupe cursor-not-allowed">Stock Out</button>
+            ) : (
+              <>
+                <button onClick={handleAdd} className="btn-brown btn-lg flex-1">Add to Bag</button>
+                <button onClick={handleBuyNow} className="btn-outline btn-lg flex-1">Buy Now</button>
+              </>
+            )}
           </div>
         </Reveal>
       </div>
@@ -212,8 +216,14 @@ export default function ProductDetail({ product }: { product: Product }) {
 
       {/* Sticky mobile CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex gap-3 border-t border-taupe/20 bg-ivory/95 p-3 backdrop-blur lg:hidden">
-        <button onClick={handleAdd} className="btn-gold btn-lg flex-1">Add to Bag</button>
-        <button onClick={handleBuyNow} className="btn-outline btn-lg flex-1">Buy Now</button>
+        {isStockOut ? (
+          <button disabled className="btn-lg flex-1 rounded-full border-2 border-taupe/30 bg-taupe/10 px-6 py-3 text-sm font-medium text-taupe cursor-not-allowed">Stock Out</button>
+        ) : (
+          <>
+            <button onClick={handleAdd} className="btn-gold btn-lg flex-1">Add to Bag</button>
+            <button onClick={handleBuyNow} className="btn-outline btn-lg flex-1">Buy Now</button>
+          </>
+        )}
       </div>
       <div className="h-20 lg:hidden" />
 

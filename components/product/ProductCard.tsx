@@ -20,7 +20,13 @@ export function ProductCard({ product }: { product: Product }) {
           <Image src={product.lifestyle} alt="" fill sizes="(max-width:768px) 50vw, 25vw" className="object-cover opacity-0 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100" />
         </Link>
         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1">
-          {product.availability === "preorder" ? <Badge tone="gold">Pre-Order</Badge> : <Badge tone="brown">Original</Badge>}
+          {product.availability === "stockout" ? (
+            <Badge tone="rose">Stock Out</Badge>
+          ) : product.availability === "preorder" ? (
+            <Badge tone="gold">Pre-Order</Badge>
+          ) : (
+            <Badge tone="brown">Original</Badge>
+          )}
           {product.badge && product.badge !== "Original" && (
             <Badge tone={product.badge === "New Season" ? "emerald" : product.badge === "Low Stock" ? "rose" : "amber"}>{product.badge}</Badge>
           )}
@@ -35,10 +41,11 @@ export function ProductCard({ product }: { product: Product }) {
           {product.compareAtPrice && <span className="text-sm text-taupe line-through">{formatBDT(product.compareAtPrice)}</span>}
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <button
-            onClick={() => addItem(product)}
-            className="btn-brown flex-1 py-2 text-sm"
-          >Add to Bag</button>
+          {product.availability === "stockout" ? (
+            <button disabled className="flex-1 rounded-full border-2 border-taupe/30 bg-taupe/10 py-2 text-sm font-medium text-taupe cursor-not-allowed">Stock Out</button>
+          ) : (
+            <button onClick={() => addItem(product)} className="btn-brown flex-1 py-2 text-sm">Add to Bag</button>
+          )}
           <button
             onClick={() => toggleWishlist(product.id)}
             aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}

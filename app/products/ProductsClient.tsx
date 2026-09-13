@@ -68,7 +68,7 @@ function Filters({ local, setLocal, onClose, allBrands, allFabrics }: { local: L
 }
 
 function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilters): Product[] {
-  let out = list.filter((p) => p.availability !== "stockout");
+  let out = list.slice();
   const brand = params.get("brand");
   if (brand) out = out.filter((p) => p.brand === brand);
   const fabric = params.get("fabric");

@@ -83,6 +83,7 @@ function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilt
   if (local.sort === "price-asc") out.sort((a, b) => a.price - b.price);
   else if (local.sort === "price-desc") out.sort((a, b) => b.price - a.price);
   else if (local.sort === "newest") out.reverse();
+  out.sort((a, b) => (a.availability === "stockout" ? 1 : 0) - (b.availability === "stockout" ? 1 : 0));
   return out;
 }
 

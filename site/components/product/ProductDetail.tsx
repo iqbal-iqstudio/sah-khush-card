@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Heart, Truck, ShieldCheck, BadgeCheck, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
-import { products } from "@/data/mock-products";
+import { useAdminStore } from "@/store/admin-store";
 import { Badge } from "@/components/ui/Badge";
 import { Accordion } from "@/components/ui/Accordion";
 import { Reveal } from "@/components/ui/Reveal";
@@ -33,11 +33,11 @@ function ProductCard({ p }: { p: Product }) {
   );
 }
 
-function getRecentlyViewed(currentId: string): Product[] {
+function getRecentlyViewed(currentId: string, allProducts: Product[]): Product[] {
   if (typeof window === "undefined") return [];
   try {
     const ids: string[] = JSON.parse(localStorage.getItem("recently-viewed") || "[]");
-    return ids.filter((id) => id !== currentId).slice(0, 4).map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[];
+    return ids.filter((id) => id !== currentId).slice(0, 4).map((id) => allProducts.find((p) => p.id === id)).filter(Boolean) as Product[];
   } catch { return []; }
 }
 
@@ -55,6 +55,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
   const toggleWishlist = useCartStore((s) => s.toggleWishlist);
   const wishlist = useCartStore((s) => s.wishlist);
+  const allProducts = useAdminStore((s) => s.products);
 
   const [activeImg, setActiveImg] = useState(0);
   const [color, setColor] = useState(product.colors[0]?.name ?? "");
@@ -68,8 +69,8 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   useEffect(() => {
     addRecentlyViewed(product.id);
-    setRecentlyViewed(getRecentlyViewed(product.id));
-  }, [product.id]);
+    setRecentlyViewed(getRecentlyViewed(product.id, allProducts));
+  }, [product.id, allProducts]);
 
   const handleColorChange = (c: string) => {
     setColor(c);
@@ -83,7 +84,7 @@ export default function ProductDetail({ product }: { product: Product }) {
     router.push("/checkout");
   };
 
-  const related = products
+  const related = allProducts
     .filter((p) => p.id !== product.id && (p.brand === product.brand || p.fabric === product.fabric))
     .slice(0, 4);
 

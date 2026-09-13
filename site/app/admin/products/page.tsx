@@ -31,6 +31,9 @@ export default function AdminProductsPage() {
   const [newBrand, setNewBrand] = useState("");
   const [newFabric, setNewFabric] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [colorName, setColorName] = useState("");
+  const [colorHex, setColorHex] = useState("#000000");
+  const [colorImg, setColorImg] = useState("");
 
   useEffect(() => { initProducts(); }, [initProducts]);
 
@@ -53,12 +56,12 @@ export default function AdminProductsPage() {
       fabricBreakdown: { shirt: "", dupatta: "", trouser: "", aesthetic: "" },
       description: "", stitchingPrice: 0, badge: "",
     });
-    setNewBrand(""); setNewFabric(""); setImageUrl(""); setModalOpen(true);
+    setNewBrand(""); setNewFabric(""); setImageUrl(""); setColorName(""); setColorHex("#000000"); setColorImg(""); setModalOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p); setForm({ ...p });
-    setNewBrand(""); setNewFabric(""); setImageUrl(""); setModalOpen(true);
+    setNewBrand(""); setNewFabric(""); setImageUrl(""); setColorName(""); setColorHex("#000000"); setColorImg(""); setModalOpen(true);
   };
 
   const handleSave = () => {
@@ -105,6 +108,18 @@ export default function AdminProductsPage() {
 
   const removeGalleryImage = (idx: number) => {
     const gallery = [...(form.gallery || [])]; gallery.splice(idx, 1); setField("gallery", gallery);
+  };
+
+  const addColor = () => {
+    if (!colorName.trim()) return;
+    const colors = [...(form.colors || [])];
+    colors.push({ name: colorName.trim(), hex: colorHex, image: colorImg.trim() || form.image || "" });
+    setField("colors", colors);
+    setColorName(""); setColorHex("#000000"); setColorImg("");
+  };
+
+  const removeColor = (idx: number) => {
+    const colors = [...(form.colors || [])]; colors.splice(idx, 1); setField("colors", colors);
   };
 
   return (
@@ -287,6 +302,33 @@ export default function AdminProductsPage() {
           <div>
             <label className="mb-1 block text-xs font-medium text-taupe">Description</label>
             <textarea rows={3} value={form.description || ""} onChange={(e) => setField("description", e.target.value)} className="w-full rounded-xl border border-taupe/20 bg-ivory px-4 py-2.5 text-sm outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 resize-none" />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-taupe">Color Variants</label>
+            <p className="mb-2 text-[11px] text-taupe">Add colors available for this product (name + hex code + optional image)</p>
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <input value={colorName} onChange={(e) => setColorName(e.target.value)} placeholder="Color name (e.g. Emerald)" className="w-full rounded-xl border border-taupe/20 bg-ivory px-4 py-2.5 text-sm outline-none focus:border-gold focus:ring-1 focus:ring-gold/30" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }} />
+              </div>
+              <input type="color" value={colorHex} onChange={(e) => setColorHex(e.target.value)} className="h-[42px] w-[42px] shrink-0 cursor-pointer rounded-xl border border-taupe/20" />
+              <div className="flex-[2]">
+                <input value={colorImg} onChange={(e) => setColorImg(e.target.value)} placeholder="Image URL (optional, defaults to main)" className="w-full rounded-xl border border-taupe/20 bg-ivory px-4 py-2.5 text-sm outline-none focus:border-gold focus:ring-1 focus:ring-gold/30" />
+              </div>
+              <button onClick={addColor} type="button" className="shrink-0 rounded-xl bg-brown px-4 py-2.5 text-sm font-medium text-ivory transition hover:bg-brown-deep">Add</button>
+            </div>
+            {form.colors && form.colors.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {form.colors.map((c, i) => (
+                  <div key={i} className="group flex items-center gap-2 rounded-full border border-taupe/20 bg-white pl-1 pr-3 text-sm">
+                    <span className="h-6 w-6 shrink-0 rounded-full border border-taupe/10" style={{ backgroundColor: c.hex }} />
+                    <span className="font-medium">{c.name}</span>
+                    {c.image && <img src={c.image} alt="" className="h-5 w-5 rounded object-cover" />}
+                    <button onClick={() => removeColor(i)} className="ml-1 text-taupe opacity-0 transition group-hover:opacity-100 hover:text-red-500">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

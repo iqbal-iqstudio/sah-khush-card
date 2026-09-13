@@ -18,7 +18,7 @@ interface LocalFilters {
   sort: string;
 }
 
-function Filters({ local, setLocal, onClose, allBrands, allFabrics }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void; allBrands: string[]; allFabrics: string[] }) {
+function Filters({ local, setLocal, onClose, allBrands, allFabrics, allColors }: { local: LocalFilters; setLocal: (l: LocalFilters) => void; onClose?: () => void; allBrands: string[]; allFabrics: string[]; allColors: { name: string; hex: string }[] }) {
   const toggle = (set: Set<string>, key: string) => {
     const next = new Set(set);
     next.has(key) ? next.delete(key) : next.add(key);
@@ -46,6 +46,22 @@ function Filters({ local, setLocal, onClose, allBrands, allFabrics }: { local: L
           </label>
         ))}
       </div>
+      {allColors.length > 0 && (
+        <div className="border-b border-taupe/10 pb-5">
+          <h4 className="mb-2 text-sm font-semibold">Color</h4>
+          <div className="flex flex-wrap gap-2">
+            {allColors.map((c) => (
+              <button key={c.name} onClick={() => setLocal({ ...local, colors: toggle(local.colors, c.name) })}
+                title={c.name}
+                className={`h-7 w-7 rounded-full border-2 transition ${local.colors.has(c.name) ? "border-brown ring-2 ring-gold/40" : "border-taupe/20 hover:border-taupe/50"}`}
+                style={{ backgroundColor: c.hex }} />
+            ))}
+          </div>
+          {local.colors.size > 0 && (
+            <p className="mt-2 text-[11px] text-taupe">{[...local.colors].join(", ")}</p>
+          )}
+        </div>
+      )}
       <div className="border-b border-taupe/10 pb-5">
         <h4 className="mb-2 text-sm font-semibold">Price (৳)</h4>
         <div className="flex items-center gap-2">
@@ -99,6 +115,9 @@ export default function ProductsClient() {
 
   const allBrands = [...new Set(products.map((p) => p.brand))].sort();
   const allFabrics = [...new Set(products.map((p) => p.fabric))].sort();
+  const allColorsMap = new Map<string, string>();
+  products.forEach((p) => p.colors.forEach((c) => { if (!allColorsMap.has(c.name)) allColorsMap.set(c.name, c.hex); }));
+  const allColors = [...allColorsMap.entries()].map(([name, hex]) => ({ name, hex })).sort((a, b) => a.name.localeCompare(b.name));
 
   const filtered = useMemo(() => applyFilters(products, new URLSearchParams(params.toString()), local), [params, local, products]);
 
@@ -124,7 +143,7 @@ export default function ProductsClient() {
       <div className="grid lg:grid-cols-[260px_1fr] gap-8">
         <aside className="hidden lg:block">
           <div className="sticky top-24 rounded-2xl border border-taupe/10 bg-white p-5 shadow-soft">
-            <Filters local={local} setLocal={setLocal} allBrands={allBrands} allFabrics={allFabrics} />
+            <Filters local={local} setLocal={setLocal} allBrands={allBrands} allFabrics={allFabrics} allColors={allColors} />
             <button onClick={syncUrl} className="mt-6 w-full rounded-full bg-brown px-5 py-2.5 text-sm font-medium text-ivory shadow-soft transition-all hover:-translate-y-0.5 hover:bg-brown-deep hover:shadow-lift">
               Show {filtered.length} Results
             </button>
@@ -147,7 +166,7 @@ export default function ProductsClient() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-charcoal/40" onClick={() => setSheetOpen(false)} />
           <div className="absolute bottom-0 left-0 w-full rounded-t-3xl bg-ivory p-6 shadow-lift">
-            <Filters local={local} setLocal={setLocal} onClose={() => { syncUrl(); setSheetOpen(false); }} allBrands={allBrands} allFabrics={allFabrics} />
+            <Filters local={local} setLocal={setLocal} onClose={() => { syncUrl(); setSheetOpen(false); }} allBrands={allBrands} allFabrics={allFabrics} allColors={allColors} />
             <Button variant="brown" className="mt-6 w-full" onClick={() => { syncUrl(); setSheetOpen(false); }}>Show {filtered.length} Results</Button>
           </div>
         </div>

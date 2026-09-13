@@ -89,6 +89,11 @@ function applyFilters(list: Product[], params: URLSearchParams, local: LocalFilt
   if (brand) out = out.filter((p) => p.brand === brand);
   const fabric = params.get("fabric");
   if (fabric) out = out.filter((p) => p.fabric === fabric);
+  const search = params.get("search");
+  if (search) {
+    const q = search.toLowerCase();
+    out = out.filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.fabric.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+  }
   const sort = params.get("sort");
   if (sort) local = { ...local, sort };
   if (local.brands.size) out = out.filter((p) => local.brands.has(p.brand));

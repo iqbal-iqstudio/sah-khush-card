@@ -6,23 +6,24 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useAdminStore } from "@/store/admin-store";
 
-const SLIDES = [
+const FALLBACK_SLIDES = [
   {
     eyebrow: "The Charizma Edit",
     title: "Summer Lawn, Reimagined",
     copy: "Pure imported lawn with hand-finished embroidery. Limited premium slots.",
     cta: "Shop the Look",
     href: "/products?brand=Charizma",
-    img: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1600&q=80",
+    image: "/slide1.jpg",
   },
   {
-    eyebrow: "Luxury Chiffon ’24",
+    eyebrow: "Luxury Chiffon '24",
     title: "Intricate. Ethereal. Yours.",
     copy: "Resham and zari embroidery crafted for soirées and weddings.",
     cta: "Explore Formal Wear",
     href: "/products?fabric=Chiffon",
-    img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1600&q=80",
+    image: "/s2.jpg",
   },
   {
     eyebrow: "Raw Silk Couture",
@@ -30,32 +31,47 @@ const SLIDES = [
     copy: "Premium, substantial weaves for the woman who commands a room.",
     cta: "Discover Silk",
     href: "/products?fabric=Silk",
-    img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80",
+    image: "/s3.jpg",
   },
 ];
 
 const DURATION = 6000;
 
 export default function Hero() {
+  const storeSlides = useAdminStore((s) => s.slides);
+  const initSlides = useAdminStore((s) => s.initSlides);
   const [i, setI] = useState(0);
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
 
-  const next = () => { setDir(1); setI((p) => (p + 1) % SLIDES.length); };
-  const prev = () => { setDir(-1); setI((p) => (p - 1 + SLIDES.length) % SLIDES.length); };
+  useEffect(() => {
+    initSlides();
+  }, [initSlides]);
+
+  const slides = storeSlides.length > 0 ? storeSlides : FALLBACK_SLIDES;
+
+  const next = () => { setDir(1); setI((p) => (p + 1) % slides.length); };
+  const prev = () => { setDir(-1); setI((p) => (p - 1 + slides.length) % slides.length); };
   const go = (idx: number) => { setDir(idx > i ? 1 : -1); setI(idx); };
 
   useEffect(() => {
-    if (paused) return;
-    const t = setInterval(() => { setDir(1); setI((p) => (p + 1) % SLIDES.length); }, DURATION);
+    if (paused || slides.length === 0) return;
+    const t = setInterval(() => { setDir(1); setI((p) => (p + 1) % slides.length); }, DURATION);
     return () => clearInterval(t);
-  }, [paused]);
+  }, [paused, slides.length]);
+
+  useEffect(() => {
+    if (i >= slides.length) setI(0);
+  }, [slides.length, i]);
 
   const variants = {
     enter: (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 1 }),
     center: { x: 0, opacity: 1 },
     exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 1 }),
   };
+
+  const slide = slides[i];
+  if (!slide) return null;
 
   return (
     <section
@@ -83,7 +99,7 @@ export default function Hero() {
             else if (info.offset.x > 60) prev();
           }}
         >
-          <Image src={SLIDES[i].img} alt={SLIDES[i].title} fill priority sizes="100vw" className="object-cover" />
+          <Image src={slide.image} alt={slide.title} fill priority sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-brown-deep/80 via-brown-deep/25 to-brown-deep/40" />
           <motion.div
             key={`t-${i}`}
@@ -98,28 +114,28 @@ export default function Hero() {
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="eyebrow text-gold"
               >
-                {SLIDES[i].eyebrow}
+                {slide.eyebrow}
               </motion.p>
               <motion.h1
                 variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="font-serif text-5xl leading-[1.05] mt-4 drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-7xl"
               >
-                {SLIDES[i].title}
+                {slide.title}
               </motion.h1>
               <motion.p
                 variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-4 max-w-md text-base text-ivory/85"
               >
-                {SLIDES[i].copy}
+                {slide.copy}
               </motion.p>
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-7"
               >
-                <Button href={SLIDES[i].href} variant="gold" size="lg">{SLIDES[i].cta}</Button>
+                <Button href={slide.href} variant="gold" size="lg">{slide.cta}</Button>
               </motion.div>
             </div>
           </motion.div>
@@ -150,7 +166,7 @@ export default function Hero() {
 
       {/* Dots */}
       <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
-        {SLIDES.map((_, idx) => (
+        {slides.map((_: any, idx: number) => (
           <button
             key={idx}
             aria-label={`Go to slide ${idx + 1}`}

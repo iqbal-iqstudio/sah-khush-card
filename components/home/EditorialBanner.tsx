@@ -13,7 +13,7 @@ export default function EditorialBanner() {
           </span>
         </div>
         <div className="relative min-h-[280px]">
-          <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1200&q=80" alt="Designer at work" className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/home-low.jpg" alt="Designer at work" className="absolute inset-0 h-full w-full object-cover" />
         </div>
       </div>
     </section>

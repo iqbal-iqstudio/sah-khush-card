@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Menu, Search, Heart, ShoppingBag, User, LogIn, X } from "lucide-react";
+import { Menu, Search, Heart, ShoppingBag, X } from "lucide-react";
 import { useCartStore, selectCount } from "@/store/cart-store";
 
 const NAV = [
+  { label: "All Products", href: "/products" },
   { label: "New Arrivals", href: "/products?sort=newest" },
-  { label: "Brands", href: "/products" },
-  { label: "Sale", href: "/products?sort=price-asc" },
+  { label: "Sales", href: "/products?sale=1" },
 ];
 
 export default function Header() {
@@ -78,9 +78,6 @@ export default function Header() {
                 </span>
               )}
             </Link>
-            <Link href="/login" aria-label="Account" className="hidden hover:text-gold md:inline-flex">
-              <User className="h-5 w-5" />
-            </Link>
             <button aria-label="Cart" onClick={openCart} className="relative hover:text-gold">
               <ShoppingBag className="h-5 w-5" />
               {mounted && count > 0 && (
@@ -145,14 +142,6 @@ export default function Header() {
                 ))}
               </div>
             </div>
-            <Link
-              href="/login"
-              onClick={() => setMenuOpen(false)}
-              className="mx-6 mb-2 mt-auto flex items-center justify-between rounded-2xl border border-taupe/20 bg-alabaster px-4 py-3 text-charcoal transition hover:border-brown hover:text-brown"
-            >
-              <span className="inline-flex items-center gap-2 font-medium"><LogIn className="h-5 w-5" /> Login / My Account</span>
-              <span className="text-xs text-taupe">→</span>
-            </Link>
             <div className="flex items-center justify-between border-t border-taupe/15 px-6 py-4 text-sm">
               <Link href="/wishlist" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 text-charcoal hover:text-brown"><Heart className="h-5 w-5" /> Wishlist</Link>
               <Link href="/cart" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 text-charcoal hover:text-brown"><ShoppingBag className="h-5 w-5" /> Bag</Link>

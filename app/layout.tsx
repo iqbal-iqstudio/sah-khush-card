@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: { default: "SAH-KHUSH · Elite Pakistani Lawn & Chiffon", template: "%s · SAH-KHUSH" },
   description:
     "100% original imported Pakistani luxury lawn & chiffon — Charizma, Bin Hameed, Firdous. Authentic guaranteed. Shipping across Bangladesh with Cash on Delivery.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "SAH-KHUSH · Elite Pakistani Lawn & Chiffon",
     description: "Authentic Pakistani luxury, curated in Bangladesh.",
@@ -22,9 +25,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
-      <body className="min-h-screen bg-ivory text-charcoal">
+      <body className="flex min-h-screen flex-col bg-ivory text-charcoal">
+        <div className="bg-charcoal text-ivory/70 text-center text-xs py-2 tracking-wide">
+          Site Under Development — Some Features May Be Incomplete
+        </div>
         <Header />
-        <main>{children}</main>
+        <main className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />
       </body>

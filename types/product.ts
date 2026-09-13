@@ -1,7 +1,6 @@
-export type Brand = "Charizma" | "Bin Hameed" | "Firdous";
-export type Fabric = "Lawn" | "Chiffon" | "Organza" | "Silk";
 export type PieceType = "1-Piece" | "2-Piece" | "3-Piece";
-export type Availability = "stock" | "preorder";
+export type Availability = "stock" | "preorder" | "stockout";
+export type Badge = "Original" | "New Season" | "Trending" | "Low Stock" | "";
 
 export interface ColorVariant {
   name: string;
@@ -20,8 +19,8 @@ export interface Product {
   id: string;
   slug: string;
   name: string;
-  brand: Brand;
-  fabric: Fabric;
+  brand: string;
+  fabric: string;
   pieceType: PieceType;
   price: number;
   compareAtPrice?: number;
@@ -29,7 +28,7 @@ export interface Product {
   stockSlots?: number;
   rating: number;
   sold: number;
-  badge?: "Original" | "New Season" | "Trending" | "Low Stock";
+  badge?: Badge;
   image: string;
   lifestyle: string;
   gallery: string[];

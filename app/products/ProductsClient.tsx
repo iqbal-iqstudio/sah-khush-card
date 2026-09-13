@@ -143,6 +143,9 @@ export default function ProductsClient() {
         <aside className="hidden lg:block">
           <div className="sticky top-24 rounded-2xl border border-taupe/10 bg-white p-5 shadow-soft">
             <Filters local={local} setLocal={setLocal} />
+            <button onClick={syncUrl} className="mt-6 w-full rounded-full bg-brown px-5 py-2.5 text-sm font-medium text-ivory shadow-soft transition-all hover:-translate-y-0.5 hover:bg-brown-deep hover:shadow-lift">
+              Show {filtered.length} Results
+            </button>
           </div>
         </aside>
 

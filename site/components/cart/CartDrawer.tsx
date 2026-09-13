@@ -74,7 +74,14 @@ export default function CartDrawer() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <a
-                  href={whatsappLink(`Hello SAH-KHUSH, I'd like to order items worth ${formatBDT(subtotal)}.`)}
+                  href={whatsappLink(
+                    `Hello SAH-KHUSH! I'd like to order:\n\n` +
+                    items.map((i, idx) =>
+                      `${idx + 1}. ${i.name}\n   Brand: ${i.brand}\n   Fabric: ${i.fabric}\n   Price: ${formatBDT(i.price)} × ${i.qty} = ${formatBDT(i.price * i.qty)}`
+                    ).join("\n\n") +
+                    `\n\nTotal: ${formatBDT(subtotal)}\n\nPlease share the delivery details. Thank you!`,
+                    "8801627272342"
+                  )}
                   className="btn-gold w-full btn-lg"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm5.8 14.16c-.24.68-1.42 1.31-1.96 1.36-.5.05-.95.24-3.2-.67-2.66-1.05-4.34-3.73-4.47-3.91-.13-.18-1.06-1.41-1.06-2.69 0-1.28.67-1.91.91-2.17.24-.26.52-.33.7-.33.18 0 .35 0 .5.01.16.01.38-.06.59.45.24.56.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.29-.12.56.16.27.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.21 1.37.27.14.43.12.59-.07.16-.19.69-.8.87-1.07.18-.27.36-.23.61-.14.25.09 1.6.76 1.88.9.27.14.46.21.53.33.07.12.07.68-.17 1.36z" /></svg>
